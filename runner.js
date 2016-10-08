@@ -15,11 +15,6 @@ var start = function() {
     window.addEventListener("keydown", function(e) { onKeyEvent(e.keyCode, true) });
     window.addEventListener("keyup", function(e) { onKeyEvent(e.keyCode, false) });
     
-    createObstacle();
-    createObstacle();
-    createObstacle();
-    createObstacle();
-
     startRenderTimer();
 }
 
@@ -35,10 +30,14 @@ var redraw = function() {
     drawObstacles();
 }
 
-Number.prototype.clamp = function(min, max) {
-    if (min != null && this < min) return min;
-    if (max != null && this > max) return max;
-    return this;
+var snapBy = function(value, multiple) {
+    return Math.round(value / multiple) * multiple;
+}
+
+var clamp = function(value, min, max) {
+    if (min != null && value < min) return min;
+    if (max != null && value > max) return max;
+    return value;
 }
 
 var playerY = 0, thrust = 0;
@@ -46,33 +45,31 @@ var drawPlayer = function() {
     var w = 35, h = 50;
     var gravity = 3.2;
     
-    playerY = (playerY + thrust - gravity).clamp(0, canvas.height - h);
+    playerY = clamp(playerY + thrust - gravity, 0, canvas.height - h);
     
     context.fillRect((canvas.width / 10), canvas.height - h - playerY, w, h);
 }
 
 var obstacles = [];
 var drawObstacles = function() {
-    if (obstacles.length < 4) {
+    if (obstacles.length <= 3) {
         createObstacle();
     }
 
     obstacles.forEach(function(obstacle) {
-        obstacle.x -= 4;
-        context.fillRect(obstacle.x, obstacle.y, 10, 10);
+        obstacle.x -= 2;
+        context.fillRect(obstacle.x, obstacle.y, 40, 40);
     });
 
     obstacles = obstacles.filter(function(obstacle) {
-        return obstacle.x > -10;
+        return obstacle.x > -50;
     });
-
-    console.log(obstacles.length);
 }
 
 var createObstacle = function() {
     obstacles.push({
-        x: canvas.width - 20,
-        y: Math.random() * canvas.height
+        x: canvas.width + snapBy(Math.random() * 1000, 40 * 1.5),
+        y: canvas.height - 40
     });
 }
 
