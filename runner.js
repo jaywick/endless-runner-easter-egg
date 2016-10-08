@@ -53,9 +53,20 @@ var drawPlayer = function() {
 
 var obstacles = [];
 var drawObstacles = function() {
+    if (obstacles.length < 4) {
+        createObstacle();
+    }
+
     obstacles.forEach(function(obstacle) {
+        obstacle.x -= 4;
         context.fillRect(obstacle.x, obstacle.y, 10, 10);
     });
+
+    obstacles = obstacles.filter(function(obstacle) {
+        return obstacle.x > -10;
+    });
+
+    console.log(obstacles.length);
 }
 
 var createObstacle = function() {
