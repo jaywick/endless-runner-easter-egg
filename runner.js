@@ -15,6 +15,11 @@ var start = function() {
     window.addEventListener("keydown", function(e) { onKeyEvent(e.keyCode, true) });
     window.addEventListener("keyup", function(e) { onKeyEvent(e.keyCode, false) });
     
+    createObstacle();
+    createObstacle();
+    createObstacle();
+    createObstacle();
+
     startRenderTimer();
 }
 
@@ -27,6 +32,7 @@ var startRenderTimer = function() {
 var redraw = function() {
     context.clearRect(0, 0, canvas.width, canvas.height);
     drawPlayer();
+    drawObstacles();
 }
 
 Number.prototype.clamp = function(min, max) {
@@ -43,6 +49,20 @@ var drawPlayer = function() {
     playerY = (playerY + thrust - gravity).clamp(0, canvas.height - h);
     
     context.fillRect((canvas.width / 10), canvas.height - h - playerY, w, h);
+}
+
+var obstacles = [];
+var drawObstacles = function() {
+    obstacles.forEach(function(obstacle) {
+        context.fillRect(obstacle.x, obstacle.y, 10, 10);
+    });
+}
+
+var createObstacle = function() {
+    obstacles.push({
+        x: canvas.width - 20,
+        y: Math.random() * canvas.height
+    });
 }
 
 var onKeyEvent = function(code, pressed) {
