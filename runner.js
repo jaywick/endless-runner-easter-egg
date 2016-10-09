@@ -1,6 +1,9 @@
 "use strict";
 
-var context, canvas, player;
+var context, canvas;
+var player = {};
+var obstacles = [];
+var GRAVITY = 3.2;
 
 var start = function() {
     canvas = document.createElement("canvas");
@@ -15,7 +18,16 @@ var start = function() {
     window.addEventListener("keydown", function(e) { onKeyEvent(e.keyCode, true) });
     window.addEventListener("keyup", function(e) { onKeyEvent(e.keyCode, false) });
     
+    setup();
     startRenderTimer();
+}
+
+var setup = function () {
+    player.x = canvas.width / 10;
+    player.thrust = 0;
+    player.y = 0;
+    player.h = 50;
+    player.w = 35;
 }
 
 var startRenderTimer = function() {
@@ -28,6 +40,9 @@ var redraw = function() {
     context.clearRect(0, 0, canvas.width, canvas.height);
     drawPlayer();
     drawObstacles();
+
+    if (hasCollided())
+        console.log("collision!");
 }
 
 var snapBy = function(value, multiple) {
@@ -40,25 +55,46 @@ var clamp = function(value, min, max) {
     return value;
 }
 
-var playerY = 0, thrust = 0;
 var drawPlayer = function() {
-    var w = 35, h = 50;
-    var gravity = 3.2;
-    
-    playerY = clamp(playerY + thrust - gravity, 0, canvas.height - h);
-    
-    context.fillRect((canvas.width / 10), canvas.height - h - playerY, w, h);
+    player.y = clamp(player.y + player.thrust - GRAVITY, 0, 400);
+    renderObject(player);
 }
 
-var obstacles = [];
+var renderObject = function(item) {
+    context.fillRect(item.x, canvas.height - item.h - item.y, item.w, item.h);
+}
+
+var isBetween = function(value, min, max) {
+    return value >= min && value <= max;
+}
+
+var hasCollided = function() {
+    var playerBounds = getBounds(player);
+
+    return obstacles.some(function(obstacle) {
+        var obstacleBounds = getBounds(obstacle);
+        return (playerBounds.right  > obstacleBounds.left && playerBounds.left < obstacleBounds.right)
+            || (playerBounds.bottom > obstacleBounds.top && playerBounds.top  < obstacleBounds.bottom);
+    });
+}
+
+var getBounds = function(item) {
+    return {
+        left:   item.x,
+        right:  item.x + item.w,
+        top:    item.y + item.h,
+        bottom: item.y
+    };
+}
+
 var drawObstacles = function() {
-    if (obstacles.length <= 3) {
+    if (obstacles.length <= 2) {
         createObstacle();
     }
 
     obstacles.forEach(function(obstacle) {
         obstacle.x -= 2;
-        context.fillRect(obstacle.x, obstacle.y, 40, 40);
+        renderObject(obstacle);
     });
 
     obstacles = obstacles.filter(function(obstacle) {
@@ -67,16 +103,20 @@ var drawObstacles = function() {
 }
 
 var createObstacle = function() {
+    var side = 40;
+
     obstacles.push({
-        x: canvas.width + snapBy(Math.random() * 1000, 40 * 1.5),
-        y: canvas.height - 40
+        x: canvas.width + snapBy(Math.random() * 1000, side * 1.5),
+        y: 0,
+        h: side,
+        w: side,
     });
 }
 
 var onKeyEvent = function(code, pressed) {
     switch (code) {
         case 32:
-            thrust = pressed && 10 || 0;
+            player.thrust = pressed && 10 || 0;
             break;
         default:
             break;
