@@ -5,6 +5,7 @@ var player = {};
 var obstacles = [];
 var GRAVITY = 9.8;
 var points = 0;
+var sprites = {};
 
 var start = function() {
     canvas = document.createElement("canvas");
@@ -23,11 +24,21 @@ var start = function() {
 }
 
 var setup = function () {
+    setupSprites();
+
     player.x = canvas.width / 10;
     player.jump = 0;
     player.y = 0;
     player.h = 50;
     player.w = 35;
+}
+
+var setupSprites = function() {
+    ["walk", "fire"].forEach(function(image) {
+        var sprite = new Image();
+        sprite.src = `content/${image}.png`;
+        sprites[image] = sprite;
+    });
 }
 
 var startRenderTimer = function() {
@@ -43,8 +54,6 @@ var redraw = function() {
 
     if (hasCollided())
         console.log("collision!");
-
-    console.log(points);
 }
 
 var snapBy = function(value, multiple) {
@@ -62,11 +71,12 @@ var drawPlayer = function() {
     player.jump = Math.max(0, player.jump - 0.3);
 
     player.y = clamp(player.y + player.jump - GRAVITY, 0, 400);
-    renderObject(player);
+    renderObject(player, "walk");
 }
 
-var renderObject = function(item) {
-    context.fillRect(item.x, canvas.height - item.h - item.y, item.w, item.h);
+var renderObject = function(item, icon) {
+    context.drawImage(sprites[icon], item.x, canvas.height - item.h - item.y, item.w, item.h);
+    //context.fillRect(item.x, canvas.height - item.h - item.y, item.w, item.h);
 }
 
 var isBetween = function(value, min, max) {
@@ -110,7 +120,7 @@ var drawObstacles = function() {
 
     obstacles.forEach(function(obstacle) {
         obstacle.x -= 2;
-        renderObject(obstacle);
+        renderObject(obstacle, "fire");
     });
 
     obstacles = obstacles.filter(function(obstacle) {
