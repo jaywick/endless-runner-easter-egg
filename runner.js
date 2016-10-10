@@ -3,7 +3,7 @@
 var context, canvas;
 var player = {};
 var obstacles = [];
-var GRAVITY = 9.8;
+var GRAVITY = 12;
 var points = 0;
 var sprites = {};
 
@@ -20,35 +20,57 @@ var start = function() {
     window.addEventListener("keypress", function(e) { onKeyEvent(e.keyCode) });
     
     setup();
-    startRenderTimer();
 }
 
 var setup = function () {
     setupSprites();
+    setupPlayer();
+    setupTimers();
+}
 
+var setupPlayer = function() {
     player.x = canvas.width / 10;
     player.jump = 0;
     player.y = 0;
     player.h = 50;
     player.w = 35;
+    player.sprite = 0;
+    player.sprites = [ "walk", "walk2" ];
 }
 
 var setupSprites = function() {
-    ["walk", "fire"].forEach(function(image) {
+    ["walk", "walk2", "fire", "fire2"].forEach(function(image) {
         var sprite = new Image();
         sprite.src = `content/${image}.png`;
         sprites[image] = sprite;
     });
 }
 
-var startRenderTimer = function() {
+var setupTimers = function() {
     window.setInterval(function() {
         redraw();
     }, 1000 / 60);
+
+    window.setInterval(function() {
+        nextSprite(player);
+
+        obstacles.forEach(function(obstacle) {
+            nextSprite(obstacle);
+        });
+    }, 100);
+}
+
+var nextSprite = function(item) {
+    item.sprite++;
+    
+    if (item.sprite >= item.sprites.length)
+        item.sprite = 0;
 }
 
 var redraw = function() {
+    // clear screen
     context.clearRect(0, 0, canvas.width, canvas.height);
+
     drawPlayer();
     drawObstacles();
 
@@ -71,12 +93,12 @@ var drawPlayer = function() {
     player.jump = Math.max(0, player.jump - 0.3);
 
     player.y = clamp(player.y + player.jump - GRAVITY, 0, 400);
-    renderObject(player, "walk");
+    renderObject(player);
 }
 
-var renderObject = function(item, icon) {
-    context.drawImage(sprites[icon], item.x, canvas.height - item.h - item.y, item.w, item.h);
-    //context.fillRect(item.x, canvas.height - item.h - item.y, item.w, item.h);
+var renderObject = function(item) {
+    var key = item.sprites[item.sprite];
+    context.drawImage(sprites[key], item.x, canvas.height - item.h - item.y, item.w, item.h);
 }
 
 var isBetween = function(value, min, max) {
@@ -120,7 +142,7 @@ var drawObstacles = function() {
 
     obstacles.forEach(function(obstacle) {
         obstacle.x -= 2;
-        renderObject(obstacle, "fire");
+        renderObject(obstacle);
     });
 
     obstacles = obstacles.filter(function(obstacle) {
@@ -136,6 +158,8 @@ var createObstacle = function() {
         y: 0,
         h: side,
         w: side,
+        sprite: 0,
+        sprites: [ "fire", "fire2" ]
     });
 }
 
