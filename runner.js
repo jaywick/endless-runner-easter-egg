@@ -79,13 +79,13 @@ var hasCollided = function() {
     return obstacles.some(function(obstacle) {
         var obstacleBounds = getBounds(obstacle);
         
-        var wasHit = (playerBounds.right  > obstacleBounds.left && playerBounds.left < obstacleBounds.right)
-            || (playerBounds.bottom > obstacleBounds.top && playerBounds.top  < obstacleBounds.bottom);
+        var intersectX = isBetween(playerBounds.right, obstacleBounds.left, obstacleBounds.right)  || isBetween(playerBounds.left, obstacleBounds.left, obstacleBounds.right);
+        var intersectY = isBetween(playerBounds.bottom, obstacleBounds.bottom, obstacleBounds.top) || isBetween(playerBounds.top, obstacleBounds.bottom, obstacleBounds.top);
 
-        var avoided = (playerBounds.right  > obstacleBounds.left && playerBounds.left < obstacleBounds.right)
-                   || (playerBounds.bottom < obstacleBounds.top  && playerBounds.top  < obstacleBounds.bottom);
+        var wasHit = intersectX && intersectY;
+        var wasAvoided = intersectX && !intersectY;
 
-        if (avoided && !obstacle.avoided) {
+        if (wasAvoided && !obstacle.avoided) {
             points += 10;
             obstacle.avoided = true;
         }
