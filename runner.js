@@ -3,7 +3,7 @@
 var context, canvas;
 var player = {};
 var obstacles = [];
-var GRAVITY = 3.2;
+var GRAVITY = 9.8;
 
 var start = function() {
     canvas = document.createElement("canvas");
@@ -15,8 +15,7 @@ var start = function() {
 
     document.body.style.textAlign = "center";
     document.body.appendChild(canvas);
-    window.addEventListener("keydown", function(e) { onKeyEvent(e.keyCode, true) });
-    window.addEventListener("keyup", function(e) { onKeyEvent(e.keyCode, false) });
+    window.addEventListener("keypress", function(e) { onKeyEvent(e.keyCode) });
     
     setup();
     startRenderTimer();
@@ -24,7 +23,7 @@ var start = function() {
 
 var setup = function () {
     player.x = canvas.width / 10;
-    player.thrust = 0;
+    player.jump = 0;
     player.y = 0;
     player.h = 50;
     player.w = 35;
@@ -56,7 +55,10 @@ var clamp = function(value, min, max) {
 }
 
 var drawPlayer = function() {
-    player.y = clamp(player.y + player.thrust - GRAVITY, 0, 400);
+    // decay jump
+    player.jump = Math.max(0, player.jump - 0.3);
+
+    player.y = clamp(player.y + player.jump - GRAVITY, 0, 400);
     renderObject(player);
 }
 
@@ -113,10 +115,17 @@ var createObstacle = function() {
     });
 }
 
-var onKeyEvent = function(code, pressed) {
+var jump = function(isPressed) {
+    if (player.y != 0)
+        return;
+
+    player.jump = 20;
+}
+
+var onKeyEvent = function(code) {
     switch (code) {
         case 32:
-            player.thrust = pressed && 10 || 0;
+            jump();
             break;
         default:
             break;
