@@ -4,6 +4,7 @@ var context, canvas;
 var player = {};
 var obstacles = [];
 var GRAVITY = 9.8;
+var points = 0;
 
 var start = function() {
     canvas = document.createElement("canvas");
@@ -42,6 +43,8 @@ var redraw = function() {
 
     if (hasCollided())
         console.log("collision!");
+
+    console.log(points);
 }
 
 var snapBy = function(value, multiple) {
@@ -75,8 +78,19 @@ var hasCollided = function() {
 
     return obstacles.some(function(obstacle) {
         var obstacleBounds = getBounds(obstacle);
-        return (playerBounds.right  > obstacleBounds.left && playerBounds.left < obstacleBounds.right)
+        
+        var wasHit = (playerBounds.right  > obstacleBounds.left && playerBounds.left < obstacleBounds.right)
             || (playerBounds.bottom > obstacleBounds.top && playerBounds.top  < obstacleBounds.bottom);
+
+        var avoided = (playerBounds.right  > obstacleBounds.left && playerBounds.left < obstacleBounds.right)
+                   || (playerBounds.bottom < obstacleBounds.top  && playerBounds.top  < obstacleBounds.bottom);
+
+        if (avoided && !obstacle.avoided) {
+            points += 10;
+            obstacle.avoided = true;
+        }
+
+        return wasHit;
     });
 }
 
@@ -108,7 +122,7 @@ var createObstacle = function() {
     var side = 40;
 
     obstacles.push({
-        x: canvas.width + snapBy(Math.random() * 1000, side * 1.5),
+        x: canvas.width + snapBy(Math.random() * 1000, side * 2.5),
         y: 0,
         h: side,
         w: side,
