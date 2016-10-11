@@ -127,10 +127,12 @@ var clamp = function(value, min, max) {
 }
 
 var drawPlayer = function() {
-    // decay jump
-    player.jump = Math.max(0, player.jump - 0.3);
+    if (!isDead) {
+        // decay jump
+        player.jump = Math.max(0, player.jump - 0.3);
+        player.y = clamp(player.y + player.jump - GRAVITY, 0, 400);
+    }
 
-    player.y = clamp(player.y + player.jump - GRAVITY, 0, 400);
     renderObject(player);
 }
 
