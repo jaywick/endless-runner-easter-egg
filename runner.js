@@ -6,6 +6,8 @@ var obstacles = [];
 var GRAVITY = 12;
 var points = 0;
 var sprites = {};
+var isDead = false, isLimbo = false;
+var gameTimer, animationTimer;
 
 var start = function() {
     canvas = document.createElement("canvas");
@@ -23,6 +25,14 @@ var start = function() {
 }
 
 var setup = function () {
+    obstacles = [];
+    points = 0;
+    sprites = {};
+    isDead = false;
+
+    clearInterval(gameTimer);
+    clearInterval(animationTimer);
+
     setupSprites();
     setupPlayer();
     setupTimers();
@@ -47,11 +57,11 @@ var setupSprites = function() {
 }
 
 var setupTimers = function() {
-    window.setInterval(function() {
+    gameTimer = window.setInterval(function() {
         redraw();
     }, 1000 / 60);
 
-    window.setInterval(function() {
+    animationTimer = window.setInterval(function() {
         nextSprite(player);
 
         obstacles.forEach(function(obstacle) {
@@ -61,6 +71,8 @@ var setupTimers = function() {
 }
 
 var nextSprite = function(item) {
+    if (isDead) return;
+
     item.sprite++;
     
     if (item.sprite >= item.sprites.length)
@@ -73,9 +85,31 @@ var redraw = function() {
 
     drawPlayer();
     drawObstacles();
+    drawGUI();
 
     if (hasCollided())
-        console.log("collision!");
+        die();
+}
+
+var die = function() {
+    isDead = true;
+    isLimbo = true;
+
+    setTimeout(function() {
+        isLimbo = false;
+    }, 500);
+}
+
+var drawGUI = function() {
+    context.textAlign = "right";
+    context.font = "bold 15px Courier";
+    context.fillText(points + " points", canvas.width - 30, 30);
+
+    if (isDead) {
+        context.textAlign = "center";
+        context.font = "bold 42px Courier";
+        context.fillText("WASTED", canvas.width / 2, canvas.height / 2);
+    }
 }
 
 var snapBy = function(value, multiple) {
@@ -141,7 +175,11 @@ var drawObstacles = function() {
     }
 
     obstacles.forEach(function(obstacle) {
-        obstacle.x -= 2;
+        if (!isDead) {
+            // move obstacle
+            obstacle.x -= 2;
+        }
+        
         renderObject(obstacle);
     });
 
@@ -171,12 +209,16 @@ var jump = function(isPressed) {
 }
 
 var onKeyEvent = function(code) {
-    switch (code) {
-        case 32:
-            jump();
-            break;
-        default:
-            break;
+    if (code === 32) {
+        // space
+        if (isDead) {
+            if (isLimbo) return;
+
+            setup();
+            return;
+        }
+
+        jump();
     }
 }
 
