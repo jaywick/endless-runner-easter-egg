@@ -8,11 +8,12 @@ var points = 0;
 var sprites = {};
 var isDead = false, isLimbo = false;
 var gameTimer, animationTimer;
-var elapsed = true;
+var elapsed = 0;
+var isKeyPressed = false;
 
 var FRAME_RATE = 60;
 
-var start = function() {
+var setup = function () {
     canvas = document.createElement("canvas");
     canvas.width = 700;
     canvas.height = 300;
@@ -22,20 +23,20 @@ var start = function() {
 
     document.body.style.textAlign = "center";
     document.body.appendChild(canvas);
-    document.addEventListener("keypress", function(e) { onKeyEvent(e.keyCode) });
-    
-    setup();
+
+    document.addEventListener("keydown", function(e) {
+        onKeyEvent(e.keyCode);
+    });
+
+    start();
 }
 
-var setup = function () {
+var start = function () {
     obstacles = [];
     points = 0;
     sprites = {};
     isDead = false;
     isLimbo = false;
-
-    clearInterval(gameTimer);
-    clearInterval(animationTimer);
 
     setupSprites();
     setupPlayer();
@@ -61,6 +62,9 @@ var setupSprites = function() {
 }
 
 var setupTimers = function() {
+    clearInterval(gameTimer);
+    clearInterval(animationTimer);
+
     gameTimer = window.setInterval(function() {
         redraw();
         elapsed += 1 / FRAME_RATE;
@@ -228,7 +232,7 @@ var onKeyEvent = function(code) {
         if (isDead) {
             if (isLimbo) return;
 
-            setup();
+            start();
             return;
         }
 
@@ -237,5 +241,5 @@ var onKeyEvent = function(code) {
 }
 
 window.onload = function() {
-    start();
+    setup();
 }
