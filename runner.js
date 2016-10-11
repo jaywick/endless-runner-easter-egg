@@ -12,9 +12,12 @@ var elapsed = 0;
 var isKeyPressed = false;
 
 var FRAME_RATE = 60;
+var SPACE_KEY = 32;
+var ESC_KEY = 27;
 
 var setup = function () {
     canvas = document.createElement("canvas");
+    canvas.id = "runner-easter-egg"
     canvas.width = 700;
     canvas.height = 300;
     canvas.style.backgroundColor = "whitesmoke";
@@ -24,9 +27,7 @@ var setup = function () {
     document.body.style.textAlign = "center";
     document.body.appendChild(canvas);
 
-    document.addEventListener("keydown", function(e) {
-        onKeyEvent(e.keyCode);
-    });
+    document.addEventListener("keydown", onKeyEvent);
 
     start();
 }
@@ -43,6 +44,15 @@ var start = function () {
     setupTimers();
 }
 
+var exit = function() {
+    document.removeEventListener("keydown", onKeyEvent);
+    document.getElementById("runner-easter-egg").remove();
+
+    clearInterval(gameTimer);
+    clearInterval(animationTimer);
+
+}
+
 var setupPlayer = function() {
     player.x = canvas.width / 10;
     player.jump = 0;
@@ -54,7 +64,7 @@ var setupPlayer = function() {
 }
 
 var setupSprites = function() {
-    ["walk", "walk2", "fire", "fire2"].forEach(function(image) {
+    ["walk", "walk2", "fire", "fire2", "jump"].forEach(function(image) {
         var sprite = new Image();
         sprite.src = `content/${image}.png`;
         sprites[image] = sprite;
@@ -92,8 +102,8 @@ var redraw = function() {
     // clear screen
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    drawObstacles();
     drawPlayer();
+    drawObstacles();
     drawGUI();
 
     if (hasCollided())
@@ -112,12 +122,12 @@ var die = function() {
 var drawGUI = function() {
     context.textAlign = "right";
     context.font = "bold 15px Courier";
-    context.fillText(points + " points", canvas.width - 30, 30);
+    context.fillText(points, canvas.width - 30, 30);
 
     if (isDead) {
         context.textAlign = "center";
         context.font = "bold 42px Courier";
-        context.fillText("WASTED", canvas.width / 2, canvas.height / 2);
+        context.fillText("FIN.", canvas.width / 2, canvas.height / 2);
     }
 }
 
@@ -156,11 +166,6 @@ var hasCollided = function() {
     return obstacles.some(function(obstacle) {
         var obstacleBounds = getBounds(obstacle);
 
-        // apply collision tolerance to obstacles
-        obstacleBounds.top -= 10;
-        obstacleBounds.left += 10;
-        obstacleBounds.right -= 15;
-        
         var intersectX = isBetween(playerBounds.right, obstacleBounds.left, obstacleBounds.right)  || isBetween(playerBounds.left, obstacleBounds.left, obstacleBounds.right);
         var intersectY = isBetween(playerBounds.bottom, obstacleBounds.bottom, obstacleBounds.top) || isBetween(playerBounds.top, obstacleBounds.bottom, obstacleBounds.top);
 
@@ -177,10 +182,13 @@ var hasCollided = function() {
 }
 
 var getBounds = function(item) {
+    var toleranceX = 0.25;
+    var toleranceTop = 0.33;
+
     return {
-        left:   item.x,
-        right:  item.x + item.w,
-        top:    item.y + item.h,
+        left:   item.x + (item.w * toleranceX),
+        right:  item.x + item.w - (item.w * toleranceX),
+        top:    item.y + item.h - (item.h * toleranceTop),
         bottom: item.y
     };
 }
@@ -226,9 +234,8 @@ var jump = function(isPressed) {
     player.jump = 20;
 }
 
-var onKeyEvent = function(code) {
-    if (code === 32) {
-        // space
+var onKeyEvent = function(e) {
+    if (e.keyCode === SPACE_KEY) {
         if (isDead) {
             if (isLimbo) return;
 
@@ -237,6 +244,8 @@ var onKeyEvent = function(code) {
         }
 
         jump();
+    } else if (e.keyCode === ESC_KEY) {
+        exit();
     }
 }
 
