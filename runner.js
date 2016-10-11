@@ -4,6 +4,7 @@ var context, canvas;
 var player = {};
 var obstacles = [];
 var trees = [];
+var stars = [];
 var GRAVITY = 12.5;
 var points = 0;
 var sprites = {};
@@ -66,7 +67,7 @@ var setupPlayer = function() {
 }
 
 var setupSprites = function() {
-    ["walk", "walk2", "fire", "fire2", "tree"].forEach(function(image) {
+    ["walk", "walk2", "fire", "fire2", "tree", "star"].forEach(function(image) {
         var sprite = new Image();
         sprite.src = `content/${image}.png`;
         sprites[image] = sprite;
@@ -105,12 +106,12 @@ var redraw = function() {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
     drawBackground();
+    drawStars();
     drawPlayer();
     drawObstacles();
     drawGUI();
 
-    if (hasCollided())
-        die();
+    detectCollisions();
 }
 
 var die = function() {
@@ -163,8 +164,20 @@ var isBetween = function(value, min, max) {
     return value >= min && value <= max;
 }
 
-var hasCollided = function() {
+var detectCollisions = function() {
     var playerBounds = getBounds(player);
+
+    stars.forEach(function(star) {
+        var starBounds = getBounds(star);
+
+        var intersectX = isBetween(playerBounds.right, starBounds.left, starBounds.right)  || isBetween(playerBounds.left, starBounds.left, starBounds.right);
+        var intersectY = isBetween(playerBounds.bottom, starBounds.bottom, starBounds.top) || isBetween(playerBounds.top, starBounds.bottom, starBounds.top);
+
+        if (intersectX && intersectY && !star.collected) {
+            star.collected = true;
+            points += 10;
+        }
+    });
 
     return obstacles.some(function(obstacle) {
         var obstacleBounds = getBounds(obstacle);
@@ -173,6 +186,12 @@ var hasCollided = function() {
         var intersectY = isBetween(playerBounds.bottom, obstacleBounds.bottom, obstacleBounds.top) || isBetween(playerBounds.top, obstacleBounds.bottom, obstacleBounds.top);
 
         var wasHit = intersectX && intersectY;
+
+        if (wasHit) {
+            die();
+            return true;
+        }
+
         var wasAvoided = intersectX && !intersectY;
 
         if (wasAvoided && !obstacle.avoided) {
@@ -180,7 +199,7 @@ var hasCollided = function() {
             obstacle.avoided = true;
         }
 
-        return wasHit;
+        return wasHit
     });
 }
 
@@ -263,6 +282,42 @@ var createTree = function() {
         w: 64 * scale,
         sprite: 0,
         sprites: [ "tree" ]
+    });
+}
+
+var drawStars = function() {
+    var starsPerElapsed = elapsed * 0.1;
+    var starSpeedPerElapsed = Math.pow(elapsed, 0.1) + 1;
+
+    if (stars.length <= starsPerElapsed) {
+        createStar();
+    }
+
+    stars.forEach(function(star) {
+        if (star.collected)
+            return;
+
+        if (!isDead) {
+            // move star
+            star.x -= starSpeedPerElapsed;
+        }
+        
+        renderObject(star);
+    });
+
+    stars = stars.filter(function(star) {
+        return star.x > -50;
+    });
+}
+
+var createStar = function() {
+    stars.push({
+        x: canvas.width + snapBy(Math.random() * 1000, 100),
+        y: 100,
+        h: 23,
+        w: 24,
+        sprite: 0,
+        sprites: [ "star" ]
     });
 }
 
