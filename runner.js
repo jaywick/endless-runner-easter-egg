@@ -236,4 +236,6 @@ var onKeyEvent = function(code) {
     }
 }
 
-start();
+window.onload = function() {
+    start();
+}
