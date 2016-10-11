@@ -3,7 +3,7 @@
 var context, canvas;
 var player = {};
 var obstacles = [];
-var GRAVITY = 10;
+var GRAVITY = 12.5;
 var points = 0;
 var sprites = {};
 var isDead = false, isLimbo = false;
@@ -32,6 +32,7 @@ var setup = function () {
     points = 0;
     sprites = {};
     isDead = false;
+    isLimbo = false;
 
     clearInterval(gameTimer);
     clearInterval(animationTimer);
@@ -150,10 +151,14 @@ var hasCollided = function() {
 
     return obstacles.some(function(obstacle) {
         var obstacleBounds = getBounds(obstacle);
+
+        // apply collision tolerance to obstacles
+        obstacleBounds.top -= 10;
+        obstacleBounds.left += 7;
+        obstacleBounds.right -= 10;
         
-        var tolerance = 10;
-        var intersectX = isBetween(playerBounds.right, obstacleBounds.left + tolerance, obstacleBounds.right - tolerance)  || isBetween(playerBounds.left, obstacleBounds.left + tolerance, obstacleBounds.right - tolerance);
-        var intersectY = isBetween(playerBounds.bottom, obstacleBounds.bottom + tolerance, obstacleBounds.top - tolerance) || isBetween(playerBounds.top, obstacleBounds.bottom + tolerance, obstacleBounds.top - tolerance);
+        var intersectX = isBetween(playerBounds.right, obstacleBounds.left, obstacleBounds.right)  || isBetween(playerBounds.left, obstacleBounds.left, obstacleBounds.right);
+        var intersectY = isBetween(playerBounds.bottom, obstacleBounds.bottom, obstacleBounds.top) || isBetween(playerBounds.top, obstacleBounds.bottom, obstacleBounds.top);
 
         var wasHit = intersectX && intersectY;
         var wasAvoided = intersectX && !intersectY;
