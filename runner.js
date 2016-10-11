@@ -38,6 +38,7 @@ var start = function () {
     sprites = {};
     isDead = false;
     isLimbo = false;
+    elapsed = 0;
 
     setupSprites();
     setupPlayer();
@@ -195,6 +196,7 @@ var getBounds = function(item) {
 
 var drawObstacles = function() {
     var obstaclesPerElapsed = Math.pow(elapsed, 0.1);
+    var obstacleSpeedPerElapsed = Math.pow(elapsed, 0.1);
 
     if (obstacles.length <=  obstaclesPerElapsed) {
         createObstacle();
@@ -203,7 +205,7 @@ var drawObstacles = function() {
     obstacles.forEach(function(obstacle) {
         if (!isDead) {
             // move obstacle
-            obstacle.x -= 2;
+            obstacle.x -= obstacleSpeedPerElapsed;
         }
         
         renderObject(obstacle);
@@ -218,7 +220,7 @@ var createObstacle = function() {
     var side = 40;
 
     obstacles.push({
-        x: canvas.width + snapBy(Math.random() * 1000, side * 2.5),
+        x: canvas.width + snapBy(Math.random() * 1000, side * 5),
         y: 0,
         h: side,
         w: side,
