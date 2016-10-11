@@ -22,7 +22,7 @@ var start = function() {
 
     document.body.style.textAlign = "center";
     document.body.appendChild(canvas);
-    window.addEventListener("keypress", function(e) { onKeyEvent(e.keyCode) });
+    document.addEventListener("keypress", function(e) { onKeyEvent(e.keyCode) });
     
     setup();
 }
@@ -154,8 +154,8 @@ var hasCollided = function() {
 
         // apply collision tolerance to obstacles
         obstacleBounds.top -= 10;
-        obstacleBounds.left += 7;
-        obstacleBounds.right -= 10;
+        obstacleBounds.left += 10;
+        obstacleBounds.right -= 15;
         
         var intersectX = isBetween(playerBounds.right, obstacleBounds.left, obstacleBounds.right)  || isBetween(playerBounds.left, obstacleBounds.left, obstacleBounds.right);
         var intersectY = isBetween(playerBounds.bottom, obstacleBounds.bottom, obstacleBounds.top) || isBetween(playerBounds.top, obstacleBounds.bottom, obstacleBounds.top);
