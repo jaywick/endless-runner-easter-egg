@@ -3,6 +3,7 @@
 var context, canvas;
 var player = {};
 var obstacles = [];
+var trees = [];
 var GRAVITY = 12.5;
 var points = 0;
 var sprites = {};
@@ -65,7 +66,7 @@ var setupPlayer = function() {
 }
 
 var setupSprites = function() {
-    ["walk", "walk2", "fire", "fire2", "jump"].forEach(function(image) {
+    ["walk", "walk2", "fire", "fire2", "tree"].forEach(function(image) {
         var sprite = new Image();
         sprite.src = `content/${image}.png`;
         sprites[image] = sprite;
@@ -103,6 +104,7 @@ var redraw = function() {
     // clear screen
     context.clearRect(0, 0, canvas.width, canvas.height);
 
+    drawBackground();
     drawPlayer();
     drawObstacles();
     drawGUI();
@@ -196,7 +198,7 @@ var getBounds = function(item) {
 
 var drawObstacles = function() {
     var obstaclesPerElapsed = Math.pow(elapsed, 0.1);
-    var obstacleSpeedPerElapsed = Math.pow(elapsed, 0.1);
+    var obstacleSpeedPerElapsed = Math.pow(elapsed, 0.1) + 1;
 
     if (obstacles.length <=  obstaclesPerElapsed) {
         createObstacle();
@@ -226,6 +228,41 @@ var createObstacle = function() {
         w: side,
         sprite: 0,
         sprites: [ "fire", "fire2" ]
+    });
+}
+
+var drawBackground = function() {
+    var treeSpeedPerElapsed = Math.pow(elapsed, 0.1) * 0.8;
+
+    if (trees.length <=  5) {
+        createTree();
+    }
+
+    trees.forEach(function(tree) {
+        if (!isDead) {
+            // move tree
+            tree.x -= treeSpeedPerElapsed;
+        }
+        
+        renderObject(tree);
+    });
+
+    trees = trees.filter(function(tree) {
+        return tree.x > -50;
+    });
+}
+
+var createTree = function() {
+    var side = 40;
+    var scale = Math.random() * 0.4 + 0.9;
+
+    trees.push({
+        x: canvas.width + Math.random() * 1000,
+        y: 0,
+        h: 120 * scale,
+        w: 64 * scale,
+        sprite: 0,
+        sprites: [ "tree" ]
     });
 }
 
