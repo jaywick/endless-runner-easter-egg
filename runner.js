@@ -3,11 +3,14 @@
 var context, canvas;
 var player = {};
 var obstacles = [];
-var GRAVITY = 12;
+var GRAVITY = 10;
 var points = 0;
 var sprites = {};
 var isDead = false, isLimbo = false;
 var gameTimer, animationTimer;
+var elapsed = true;
+
+var FRAME_RATE = 60;
 
 var start = function() {
     canvas = document.createElement("canvas");
@@ -42,8 +45,8 @@ var setupPlayer = function() {
     player.x = canvas.width / 10;
     player.jump = 0;
     player.y = 0;
-    player.h = 50;
-    player.w = 35;
+    player.h = 48;
+    player.w = 48;
     player.sprite = 0;
     player.sprites = [ "walk", "walk2" ];
 }
@@ -59,7 +62,8 @@ var setupSprites = function() {
 var setupTimers = function() {
     gameTimer = window.setInterval(function() {
         redraw();
-    }, 1000 / 60);
+        elapsed += 1 / FRAME_RATE;
+    }, 1000 / FRAME_RATE);
 
     animationTimer = window.setInterval(function() {
         nextSprite(player);
@@ -83,8 +87,8 @@ var redraw = function() {
     // clear screen
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    drawPlayer();
     drawObstacles();
+    drawPlayer();
     drawGUI();
 
     if (hasCollided())
@@ -145,8 +149,9 @@ var hasCollided = function() {
     return obstacles.some(function(obstacle) {
         var obstacleBounds = getBounds(obstacle);
         
-        var intersectX = isBetween(playerBounds.right, obstacleBounds.left, obstacleBounds.right)  || isBetween(playerBounds.left, obstacleBounds.left, obstacleBounds.right);
-        var intersectY = isBetween(playerBounds.bottom, obstacleBounds.bottom, obstacleBounds.top) || isBetween(playerBounds.top, obstacleBounds.bottom, obstacleBounds.top);
+        var tolerance = 10;
+        var intersectX = isBetween(playerBounds.right, obstacleBounds.left + tolerance, obstacleBounds.right - tolerance)  || isBetween(playerBounds.left, obstacleBounds.left + tolerance, obstacleBounds.right - tolerance);
+        var intersectY = isBetween(playerBounds.bottom, obstacleBounds.bottom + tolerance, obstacleBounds.top - tolerance) || isBetween(playerBounds.top, obstacleBounds.bottom + tolerance, obstacleBounds.top - tolerance);
 
         var wasHit = intersectX && intersectY;
         var wasAvoided = intersectX && !intersectY;
@@ -170,7 +175,9 @@ var getBounds = function(item) {
 }
 
 var drawObstacles = function() {
-    if (obstacles.length <= 2) {
+    var obstaclesPerElapsed = Math.pow(elapsed, 0.1);
+
+    if (obstacles.length <=  obstaclesPerElapsed) {
         createObstacle();
     }
 
