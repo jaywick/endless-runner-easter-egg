@@ -7,7 +7,7 @@ var trees = [];
 var stars = [];
 var GRAVITY = 12.5;
 var points = 0;
-var sprites = {};
+var spritesheet;
 var isDead = false, isLimbo = false;
 var gameTimer, animationTimer;
 var elapsed = 0;
@@ -16,6 +16,15 @@ var isKeyPressed = false;
 var FRAME_RATE = 60;
 var SPACE_KEY = 32;
 var ESC_KEY = 27;
+
+var spritePositions = {
+    "fire":  { x: 5,   y: 5,  w: 48, h: 48 },
+    "fire2": { x: 63,  y: 5,  w: 48, h: 48 },
+    "walk":  { x: 121, y: 5,  w: 48, h: 48 },
+    "walk2": { x: 81,  y: 63, w: 48, h: 48 },
+    "tree":  { x: 39,  y: 63, w: 32, h: 58 },
+    "star":  { x: 5,   y: 63, w: 24, h: 23 }
+};
 
 var setup = function () {
     canvas = document.createElement("canvas");
@@ -37,7 +46,6 @@ var setup = function () {
 var start = function () {
     obstacles = [];
     points = 0;
-    sprites = {};
     isDead = false;
     isLimbo = false;
     elapsed = 0;
@@ -47,61 +55,57 @@ var start = function () {
     setupTimers();
 }
 
-var exit = function() {
+var exit = function () {
     document.removeEventListener("keydown", onKeyEvent);
     document.getElementById("runner-easter-egg").remove();
 
     clearInterval(gameTimer);
     clearInterval(animationTimer);
-
 }
 
-var setupPlayer = function() {
+var setupPlayer = function () {
     player.x = canvas.width / 10;
     player.jump = 0;
     player.y = 0;
     player.h = 48;
     player.w = 48;
     player.sprite = 0;
-    player.sprites = [ "walk", "walk2" ];
+    player.sprites = ["walk", "walk2"];
 }
 
-var setupSprites = function() {
-    ["walk", "walk2", "fire", "fire2", "tree", "star"].forEach(function(image) {
-        var sprite = new Image();
-        sprite.src = `content/${image}.png`;
-        sprites[image] = sprite;
-    });
+var setupSprites = function () {
+    spritesheet = new Image();
+    spritesheet.src = "spritesheet.png";
 }
 
-var setupTimers = function() {
+var setupTimers = function () {
     clearInterval(gameTimer);
     clearInterval(animationTimer);
 
-    gameTimer = window.setInterval(function() {
+    gameTimer = window.setInterval(function () {
         redraw();
         elapsed += 1 / FRAME_RATE;
     }, 1000 / FRAME_RATE);
 
-    animationTimer = window.setInterval(function() {
+    animationTimer = window.setInterval(function () {
         nextSprite(player);
 
-        obstacles.forEach(function(obstacle) {
+        obstacles.forEach(function (obstacle) {
             nextSprite(obstacle);
         });
     }, 100);
 }
 
-var nextSprite = function(item) {
+var nextSprite = function (item) {
     if (isDead) return;
 
     item.sprite++;
-    
+
     if (item.sprite >= item.sprites.length)
         item.sprite = 0;
 }
 
-var redraw = function() {
+var redraw = function () {
     // clear screen
     context.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -114,16 +118,16 @@ var redraw = function() {
     detectCollisions();
 }
 
-var die = function() {
+var die = function () {
     isDead = true;
     isLimbo = true;
 
-    setTimeout(function() {
+    setTimeout(function () {
         isLimbo = false;
     }, 500);
 }
 
-var drawGUI = function() {
+var drawGUI = function () {
     context.textAlign = "right";
     context.font = "bold 15px Courier";
     context.fillText(points, canvas.width - 30, 30);
@@ -135,17 +139,17 @@ var drawGUI = function() {
     }
 }
 
-var snapBy = function(value, multiple) {
+var snapBy = function (value, multiple) {
     return Math.round(value / multiple) * multiple;
 }
 
-var clamp = function(value, min, max) {
+var clamp = function (value, min, max) {
     if (min != null && value < min) return min;
     if (max != null && value > max) return max;
     return value;
 }
 
-var drawPlayer = function() {
+var drawPlayer = function () {
     if (!isDead) {
         // decay jump
         player.jump = Math.max(0, player.jump - 0.3);
@@ -155,22 +159,23 @@ var drawPlayer = function() {
     renderObject(player);
 }
 
-var renderObject = function(item) {
+var renderObject = function (item) {
     var key = item.sprites[item.sprite];
-    context.drawImage(sprites[key], item.x, canvas.height - item.h - item.y, item.w, item.h);
+    var position = spritePositions[key];
+    context.drawImage(spritesheet, position.x, position.y, position.w, position.h, item.x, canvas.height - item.h - item.y, item.w, item.h);
 }
 
-var isBetween = function(value, min, max) {
+var isBetween = function (value, min, max) {
     return value >= min && value <= max;
 }
 
-var detectCollisions = function() {
+var detectCollisions = function () {
     var playerBounds = getBounds(player);
 
-    stars.forEach(function(star) {
+    stars.forEach(function (star) {
         var starBounds = getBounds(star);
 
-        var intersectX = isBetween(playerBounds.right, starBounds.left, starBounds.right)  || isBetween(playerBounds.left, starBounds.left, starBounds.right);
+        var intersectX = isBetween(playerBounds.right, starBounds.left, starBounds.right) || isBetween(playerBounds.left, starBounds.left, starBounds.right);
         var intersectY = isBetween(playerBounds.bottom, starBounds.bottom, starBounds.top) || isBetween(playerBounds.top, starBounds.bottom, starBounds.top);
 
         if (intersectX && intersectY && !star.collected) {
@@ -179,10 +184,10 @@ var detectCollisions = function() {
         }
     });
 
-    return obstacles.some(function(obstacle) {
+    return obstacles.some(function (obstacle) {
         var obstacleBounds = getBounds(obstacle);
 
-        var intersectX = isBetween(playerBounds.right, obstacleBounds.left, obstacleBounds.right)  || isBetween(playerBounds.left, obstacleBounds.left, obstacleBounds.right);
+        var intersectX = isBetween(playerBounds.right, obstacleBounds.left, obstacleBounds.right) || isBetween(playerBounds.left, obstacleBounds.left, obstacleBounds.right);
         var intersectY = isBetween(playerBounds.bottom, obstacleBounds.bottom, obstacleBounds.top) || isBetween(playerBounds.top, obstacleBounds.bottom, obstacleBounds.top);
 
         var wasHit = intersectX && intersectY;
@@ -203,75 +208,74 @@ var detectCollisions = function() {
     });
 }
 
-var getBounds = function(item) {
+var getBounds = function (item) {
     var toleranceX = 0.25;
     var toleranceTop = 0.33;
 
     return {
-        left:   item.x + (item.w * toleranceX),
-        right:  item.x + item.w - (item.w * toleranceX),
-        top:    item.y + item.h - (item.h * toleranceTop),
+        left: item.x + (item.w * toleranceX),
+        right: item.x + item.w - (item.w * toleranceX),
+        top: item.y + item.h - (item.h * toleranceTop),
         bottom: item.y
     };
 }
 
-var drawObstacles = function() {
-    var obstaclesPerElapsed = Math.pow(elapsed, 0.1);
+var drawObstacles = function () {
     var obstacleSpeedPerElapsed = Math.pow(elapsed, 0.1) + 1;
 
-    if (obstacles.length <=  obstaclesPerElapsed) {
+    if (obstacles.length <= 3) {
         createObstacle();
     }
 
-    obstacles.forEach(function(obstacle) {
+    obstacles.forEach(function (obstacle) {
         if (!isDead) {
             // move obstacle
             obstacle.x -= obstacleSpeedPerElapsed;
         }
-        
+
         renderObject(obstacle);
     });
 
-    obstacles = obstacles.filter(function(obstacle) {
+    obstacles = obstacles.filter(function (obstacle) {
         return obstacle.x > -50;
     });
 }
 
-var createObstacle = function() {
+var createObstacle = function () {
     var side = 40;
 
     obstacles.push({
-        x: canvas.width + snapBy(Math.random() * 1000, side * 5),
+        x: canvas.width + Math.random() * 1000 + side * 2,
         y: 0,
         h: side,
         w: side,
         sprite: 0,
-        sprites: [ "fire", "fire2" ]
+        sprites: ["fire", "fire2"]
     });
 }
 
-var drawBackground = function() {
+var drawBackground = function () {
     var treeSpeedPerElapsed = Math.pow(elapsed, 0.1) * 0.8;
 
-    if (trees.length <=  5) {
+    if (trees.length <= 5) {
         createTree();
     }
 
-    trees.forEach(function(tree) {
+    trees.forEach(function (tree) {
         if (!isDead) {
             // move tree
             tree.x -= treeSpeedPerElapsed;
         }
-        
+
         renderObject(tree);
     });
 
-    trees = trees.filter(function(tree) {
+    trees = trees.filter(function (tree) {
         return tree.x > -50;
     });
 }
 
-var createTree = function() {
+var createTree = function () {
     var side = 40;
     var scale = Math.random() * 0.4 + 0.9;
 
@@ -281,11 +285,11 @@ var createTree = function() {
         h: 120 * scale,
         w: 64 * scale,
         sprite: 0,
-        sprites: [ "tree" ]
+        sprites: ["tree"]
     });
 }
 
-var drawStars = function() {
+var drawStars = function () {
     var starsPerElapsed = elapsed * 0.1;
     var starSpeedPerElapsed = Math.pow(elapsed, 0.1) + 1;
 
@@ -293,7 +297,7 @@ var drawStars = function() {
         createStar();
     }
 
-    stars.forEach(function(star) {
+    stars.forEach(function (star) {
         if (star.collected)
             return;
 
@@ -301,34 +305,34 @@ var drawStars = function() {
             // move star
             star.x -= starSpeedPerElapsed;
         }
-        
+
         renderObject(star);
     });
 
-    stars = stars.filter(function(star) {
+    stars = stars.filter(function (star) {
         return star.x > -50;
     });
 }
 
-var createStar = function() {
+var createStar = function () {
     stars.push({
-        x: canvas.width + snapBy(Math.random() * 1000, 100),
+        x: canvas.width + Math.random() * 1000 + Math.random() * 1000,
         y: 100,
         h: 23,
         w: 24,
         sprite: 0,
-        sprites: [ "star" ]
+        sprites: ["star"]
     });
 }
 
-var jump = function(isPressed) {
+var jump = function (isPressed) {
     if (player.y != 0)
         return;
 
     player.jump = 20;
 }
 
-var onKeyEvent = function(e) {
+var onKeyEvent = function (e) {
     if (e.keyCode === SPACE_KEY) {
         if (isDead) {
             if (isLimbo) return;
@@ -343,6 +347,4 @@ var onKeyEvent = function(e) {
     }
 }
 
-window.onload = function() {
-    setup();
-}
+setup();
